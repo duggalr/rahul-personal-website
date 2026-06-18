@@ -5,7 +5,7 @@ import Link from "next/link";
 export default function NameHeader({ as = "home", label = "Rahul Duggal" }) {
   if (as === "home") {
     return (
-      <h1 className="text-[44px] font-semibold leading-none tracking-[-0.03em] text-foreground sm:text-[52px]">
+      <h1 className="text-[40px] font-semibold leading-none tracking-[-0.03em] text-foreground sm:text-[52px]">
         {label}
       </h1>
     );

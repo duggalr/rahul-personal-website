@@ -10,6 +10,7 @@ const inter = Inter({
 
 export const metadata = {
   metadataBase: new URL("https://www.rahulduggal.me"),
+  manifest: "/site.webmanifest",
   title: {
     default: "Rahul Duggal",
     template: "%s · Rahul Duggal",

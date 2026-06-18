@@ -30,7 +30,7 @@ export default function Socials() {
           target={social.url.startsWith("mailto:") ? undefined : "_blank"}
           rel="noopener noreferrer"
           aria-label={social.label}
-          className="text-muted transition-colors hover:text-foreground"
+          className="-my-2 py-2 text-muted transition-colors hover:text-foreground"
         >
           <social.icon className="h-[18px] w-[18px]" />
         </a>

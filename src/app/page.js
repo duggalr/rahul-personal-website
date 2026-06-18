@@ -6,7 +6,7 @@ import Socials from "@/components/Socials";
 
 export default function Home() {
   return (
-    <main className="min-h-screen pt-[22vh] pb-24">
+    <main className="min-h-screen pt-28 pb-24 sm:pt-[22vh]">
       <Container>
         <NameHeader as="home" />
 

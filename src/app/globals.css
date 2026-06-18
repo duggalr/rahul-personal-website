@@ -31,6 +31,7 @@ body {
   font-size: 1.0625rem;
   line-height: 1.75;
   color: #2a2a2a;
+  overflow-wrap: break-word;
 }
 .prose p {
   margin: 1.25em 0;

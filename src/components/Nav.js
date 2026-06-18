@@ -13,7 +13,7 @@ export default function Nav() {
         <Link
           key={link.href}
           href={link.href}
-          className="transition-colors hover:text-foreground"
+          className="-my-2 py-2 transition-colors hover:text-foreground"
         >
           {link.label}
         </Link>
