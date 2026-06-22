@@ -5,7 +5,7 @@ summary: "Week 1 of a research log: how badly does state-of-the-art ASR handle d
 draft: false
 ---
 
-**TL;DR.** My goal with this project is to build an app that translates the slurred speech of people with dysarthria into clear, understandable speech, ideally in their own voice when a sample of it exists. The foundation for that is a model that can actually *understand* dysarthric speech in the first place, and that turns out to be the hard part: today's best speech recognition models fail badly on severe dysarthria (55-65% of words wrong). This post is Part 1 of a research log on fixing that. The early win from Week 1: personalizing the model to one person's voice roughly halves the error. It's not enough on its own yet, and the main thing standing in the way is more data. Okay, now that you have some context, let's get into the post!
+**TL;DR.** My goal with this project is to build an app that translates slurred (or atypical) speech of people with dysarthria into clear, understandable speech, ideally in their own voice when a sample of it exists. The foundation for that is a model that can actually *understand* dysarthric speech in the first place, and that turns out to be the hard part: today's best speech recognition models fail badly on severe dysarthria (55-65% of words wrong). This post is Part 1 of a research log on fixing that. The early win from Week 1: personalizing the model to one person's voice roughly halves the error. It's not enough on its own yet, and the main thing standing in the way is more data. Okay, now that you have some context, let's get into the post!
 
 ## Introduction
 
@@ -19,7 +19,7 @@ So given that, I finally started getting back into this journey and going knee-d
 
 ## What is dysarthria?
 
-One of the first motor-speech disorders I came across was dysarthria. Dysarthria is a speech disorder that can result in slurred, slow, or hard-to-understand speech. It's commonly seen in people with ALS, and it also shows up with cerebral palsy, Parkinson's, multiple sclerosis, and after a stroke.
+One of the first motor-speech disorders I came across was dysarthria. Dysarthria is a speech disorder that can result in slurred, slow, or hard-to-understand speech. It happens when the muscles involved in speaking are weakened or harder to control. It's commonly seen in people with ALS, and it also shows up with cerebral palsy, Parkinson's, multiple sclerosis, and after a stroke.
 
 It's more common than you'd think. A figure of around 0.8% of the population is cited in the [TORGO database paper](https://www.cs.toronto.edu/~frank/Download/Papers/rudzicz_naacl10.pdf). If we assume that to be right, that's approximately 5 million people in North America alone.
 
@@ -62,7 +62,7 @@ The honest answer was not really. On average it barely moved the needle, and the
 - The severe speakers, the ones I actually care about, barely budged.
 - The mild speakers actually got worse, because a generic "dysarthric" adapter drags near-typical speech toward some average dysarthric distribution.
 
-The takeaway: there is no single "dysarthric model." Severe dysarthria is highly individual, and one model can't fit everyone at once.
+This kind of implies there is no single "dysarthric model." Severe dysarthria is highly individual, and one model can't fit everyone at once.
 
 ### Attempt 2: personalize to one person (the win)
 
