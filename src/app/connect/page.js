@@ -19,12 +19,12 @@ export default function Connect() {
             broadly, I&apos;m always eager and would love to chat.
           </p>
           <p>
-            Send me an email at{" "}
+            Send me an email{" "}
             <a
               href="mailto:duggalr42@gmail.com"
               className="underline decoration-[#cfcac4] underline-offset-[3px] transition-colors hover:decoration-foreground"
             >
-              duggalr42@gmail.com
+              here
             </a>
             .
           </p>

@@ -1,0 +1,85 @@
+---
+title: "Teaching speech recognition to understand dysarthric speech (Part 2)"
+date: "2026-06-23"
+summary: "Week 2 of the research log: while I wait on real data, can data augmentation squeeze more out of personalization? The results were noisy and mixed, but one pattern lined up nicely with a recent paper."
+draft: false
+---
+
+**TL;DR.** In [Part 1](https://www.rahulduggal.me/writings/dysarthric-speech-part-1), I found that personalizing a speech model to one person's own voice roughly halves the error on dysarthric speech, but it still isn't enough on its own, and the thing holding me back is more data. While I wait on access to a large clinical dataset (SAP), I tried to manufacture more data with augmentation: taking each person's handful of real recordings (from TORGO) and making warped copies (faster, slower, higher and lower in pitch) to train on. The results were noisy and mixed. A couple of speakers seemed to benefit a little, others didn't, and the test sets are small enough that I'm not drawing strong conclusions either way. One nice thing was that a severity pattern from a [recent paper](https://arxiv.org/abs/2606.19797) showed up in my own runs. Honestly, this is more just me learning and exploring the space while I wait to get access to the SAP dataset.. 🤦‍♂️
+
+## A quick recap of where I left off
+
+The goal of this project is to build an app that can take the slurred or atypical speech of someone with dysarthria and turn it into clear, understandable speech, ideally in their own voice. There are two similar projects I'm aware of that are also working on this: [Project Relate](https://sites.research.google/relate/) and [Voiceitt](https://www.voiceitt.com/).
+
+In [Part 1](https://www.rahulduggal.me/writings/dysarthric-speech-part-1), I introduced the problem and the dataset I currently have access to, and ran a few experiments. The approach that worked best was personalized fine-tuning. Instead of trying to build one model for everyone, I trained a tiny adapter on a single person's own voice and used it just for them, and it worked pretty well, roughly halving the error for the severe speakers. My goal at the moment is to get the word error rate under 10% for mild to moderate cases of dysarthric speech. Personalized fine-tuning is the right step, but I'm currently facing a bottleneck: I need more data. The ultimate fix here is getting access to the [Speech Accessibility Project (SAP)](https://speechaccessibilityproject.beckman.illinois.edu/) dataset. I've requested access, but it is still pending. 😩
+
+While I wait, I wanted to see how far I could get by squeezing more out of the data I already have. Let's explore some data augmentation methods!
+
+## The idea: make more data out of the data you have
+
+Data augmentation is a classic trick in machine learning. If you don't have enough training examples, you take the ones you do have and create slightly modified copies, so the model sees more variety and is less likely to just memorize the few examples it has. In image models you might rotate or crop a photo. For audio, you can change the speed, shift the pitch, and so on. The label (here, the transcript of what was said) stays the same.
+
+There was a cool paper I read recently in exactly this space, [Improving End-to-End Speech Recognition for Dysarthric Speech through In-Domain Data Augmentation](https://arxiv.org/abs/2606.19797). It investigates four ways to augment dysarthric speech so an ASR model can learn to recognize it better:
+
+- **Speaking-Rate Modification (SRM):** Speed the audio up or slow it down without changing the pitch. Dysarthric speech is often slow and effortful, so varying the rate gives the model practice across different tempos.
+- **Pitch Modification (PM):** Shift the voice higher or lower without changing the speed or duration.
+- **Formant Modification (FM):** Formants are the resonant frequencies of your vocal tract, the things that make an "ee" sound different from an "oo". FM nudges those resonances, which effectively simulates a slightly different vocal tract shape.
+- **Vocal Tract Length Perturbation (VTLP):** A related idea that warps the frequency axis to mimic speakers with different vocal tract lengths, so one recording can stand in for a range of physical voices.
+
+Two things stood out to me in the paper. First, the augmentation approach itself is just genuinely cool: these are simple, cheap transformations of the audio, and when I tried them on a few examples myself, the results genuinely sounded like real atypical speech. Second, they found that augmentation helps differently depending on severity. Speed changes tended to help the milder speakers, while pitch changes tended to help the more severe ones. So "more augmentation" is not automatically better, and the right kind depends on the person.
+
+## What I actually did
+
+I took the personalization setup from Part 1 (Attempt 2, the one that worked) and added the data augmentation approach from this [paper](https://arxiv.org/abs/2606.19797) to it. I only augmented the enrollment data, i.e. the clips the model trains on. The point here is to see whether training on more augmented data helps it do better on the person's real, unseen speech, especially given the limited number of examples I have.
+
+I ran four arms, each as a separate experiment:
+
+- **baseline:** no augmentation (a fresh run, in the same batch, so the comparison is apples-to-apples).
+- **speed (SRM):** each clip copied at 0.85x, 0.9x, 1.1x, and 1.15x speed.
+- **pitch (PM):** each clip copied at -2, -1, +1, and +2 semitones.
+- **SpecAugment:** a very common fourth method that randomly masks out small chunks of the audio's spectrogram during training, so the model can't lean too hard on any one part.
+
+For the speed and pitch arms, this turns each real clip into five (the original plus four warped copies), so a speaker with about 60 clips ends up training on about 300.
+
+I deliberately skipped FM and VTLP for now, since their implementations can get a bit tricky. I ran these three (speed, pitch, and SpecAugment) across four speakers (F01, M04, M01, and M02, from most to least severe) in the TORGO dataset. Since there is not a lot of data to begin with, I ran three seeds for each speaker, which came out to 48 training runs on a rented GPU.
+
+## The results
+
+The chart below provides a visualization of the results of the experiment I ran. The gray bar is the no-augmentation baseline, and the three colored bars are the augmentation methods. Lower is better.
+
+![Per-speaker WER by augmentation method](/images/blog/fig_aug_per_speaker.png)
+
+Before reading anything into these, the big caveat: the test sets here are tiny, just a handful of sentences per speaker, so the numbers are noisy and I want to be careful not to over-interpret them in either direction. With that in mind, here is what the runs actually showed.
+
+Averaged across the four speakers, the augmentation arms landed within a point or two of the baseline, sometimes a little above and sometimes a little below. There was no large, obvious effect one way or the other at this scale.
+
+The per-speaker picture has a bit more texture, though, and is worth looking at. This next chart shows, for each speaker, how much each method changed the WER compared to that speaker's own matched baseline. Bars below the line mean the error went down (better). Bars above the line mean it went up (worse).
+
+![Matched effect of augmentation per speaker](/images/blog/fig_aug_matched_effect.png)
+
+A few things I noticed:
+
+- For **M01**, all three methods lowered the error, by roughly 2.5 to 3.5 points, and fairly consistently across the three seeds. SpecAugment, which is essentially free and adds no extra files, came out best here.
+- For **M04**, the error also went down, with pitch helping most. That lines up with the severity-dependence the paper described (pitch helping a more severe speaker), so it was interesting to see the same pattern show up in my own runs.
+- For **M02**, the mildest of these four, every method nudged the error up a little. That is consistent with the paper's logic too: M02's speech is already the most intelligible of the group, so the perturbations seem to add more noise than useful variety.
+- For **F01**, I would not read much into the bars at all. F01's test set is only 3 to 5 sentences, and its scores swing wildly from seed to seed (its zero-shot error alone ranges from 41% to 79% depending on the split). There just isn't enough data there to say anything with confidence.
+
+So the picture is mixed and genuinely noisy. A couple of speakers seemed to benefit, one didn't, and one is too data-starved to tell. I'm deliberately not drawing a hard conclusion from a dataset this small.
+
+## What I take from this
+
+It was genuinely fun exploring this data augmentation technique presented in the [paper](https://arxiv.org/abs/2606.19797) for this problem. I do suspect the reason I didn't see a bigger improvement in the WER is that what all these methods really do is recycle the same roughly 60 real recordings into warped copies. They contain the same words, the same person, and the same content. That can make the model a bit more robust (which is a real thing, and might be part of why M01 improved), but it doesn't give it any genuinely new information.
+
+With that said though, it was nice to see for M01 and M04 specifically, the gains were small but consistent. What I keep coming back to is that the thing most likely to actually move the needle is real, diverse, sentence-level data for each person, which is what SAP would give me. (Please give me access to SAP, haha! 😩)
+
+## What's next
+
+Another idea I started thinking about while implementing this was synthetic atypical speech generation. This would address a big limitation of data augmentation, which is that it can't create new words. Synthetic speech generation can, and I have been looking into a technique called [voice conversion](https://arxiv.org/pdf/2505.14874).
+
+The idea there is genuinely clever: you take a clip of a healthy person reading a brand new sentence, and you convert it so it sounds like a specific dysarthric speaker said it, keeping their voice and their particular pattern of slurring. If that works, it could give the model new sentences in the right voice, which is the one thing augmentation cannot do.
+
+I haven't run anything yet; so far I've just been reading about it. There may well be a Part 3 on what I find exploring this method.
+
+In parallel, I'm still waiting on SAP dataset access… wish me luck! 🙏
+
+p.s. if you are working on this problem or something adjacent, I am always open to chatting! Feel free to send me an [email](mailto:duggalr42@gmail.com)!
