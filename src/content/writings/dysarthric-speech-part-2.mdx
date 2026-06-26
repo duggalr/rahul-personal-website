@@ -5,7 +5,7 @@ summary: "Week 2 of the research log: while I wait on real data, can data augmen
 draft: false
 ---
 
-**TL;DR.** In [Part 1](https://www.rahulduggal.me/writings/dysarthric-speech-part-1), I found that personalizing a speech model to one person's own voice roughly halves the error on dysarthric speech, but it still isn't enough on its own, and the thing holding me back is more data. While I wait on access to a large clinical dataset (SAP), I tried to manufacture more data with augmentation: taking each person's handful of real recordings (from TORGO) and making warped copies (faster, slower, higher and lower in pitch) to train on. The results were noisy and mixed. A couple of speakers seemed to benefit a little, others didn't, and the test sets are small enough that I'm not drawing strong conclusions either way. One nice thing was that a severity pattern from a [recent paper](https://arxiv.org/abs/2606.19797) showed up in my own runs. Honestly, this is more just me learning and exploring the space while I wait to get access to the SAP dataset.. 🤦‍♂️
+**TL;DR.** In [Part 1](https://www.rahulduggal.me/writings/dysarthric-speech-part-1), I found that personalizing a speech model to one person's own voice roughly halves the error on dysarthric speech, but it still isn't enough on its own, and the thing holding me back is more data. While I wait on access to a large clinical dataset (SAP), I tried to manufacture more data with augmentation: taking each person's handful of real recordings (from TORGO) and making warped copies (faster, slower, higher and lower in pitch) to train on. The results were noisy and mixed. A couple of speakers seemed to benefit a little, others didn't, and the test sets are small enough that I'm not drawing strong conclusions either way. One nice thing was that a severity pattern from a [recent paper](https://arxiv.org/abs/2606.19797) showed up in my own runs. Honestly, this blog post is more just me learning and exploring the space while I wait to get access to the SAP dataset.. 🤦‍♂️
 
 ## A quick recap of where I left off
 
@@ -30,7 +30,7 @@ Two things stood out to me in the paper. First, the augmentation approach itself
 
 ## What I actually did
 
-I took the personalization setup from Part 1 (Attempt 2, the one that worked) and added the data augmentation approach from this [paper](https://arxiv.org/abs/2606.19797) to it. I only augmented the enrollment data, i.e. the clips the model trains on. The point here is to see whether training on more augmented data helps it do better on the person's real, unseen speech, especially given the limited number of examples I have.
+I took the personalization setup from [Part 1](https://www.rahulduggal.me/writings/dysarthric-speech-part-1) (Attempt 2, the one that worked) and added the data augmentation approach from this [paper](https://arxiv.org/abs/2606.19797) to it. I only augmented the enrollment data, i.e. the clips the model trains on. The point here is to see whether training on more augmented data helps it do better on the person's real, unseen speech, especially given the limited number of examples I have.
 
 I ran four arms, each as a separate experiment:
 
@@ -41,7 +41,7 @@ I ran four arms, each as a separate experiment:
 
 For the speed and pitch arms, this turns each real clip into five (the original plus four warped copies), so a speaker with about 60 clips ends up training on about 300.
 
-I deliberately skipped FM and VTLP for now, since their implementations can get a bit tricky. I ran these three (speed, pitch, and SpecAugment) across four speakers (F01, M04, M01, and M02, from most to least severe) in the TORGO dataset. Since there is not a lot of data to begin with, I ran three seeds for each speaker, which came out to 48 training runs on a rented GPU.
+I deliberately skipped FM and VTLP for now, since their implementations can get a bit tricky. I ran these three approaches (speed, pitch, and SpecAugment) across four speakers (F01, M04, M01, and M02, from most to least severe) on the TORGO dataset. Since there is not a lot of data to begin with, I ran three seeds for each speaker, which came out to 48 training runs on a rented GPU.
 
 ## The results
 
