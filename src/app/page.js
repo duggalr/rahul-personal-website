@@ -11,7 +11,10 @@ export default function Home() {
         <NameHeader as="home" />
 
         <p className="mt-9 text-[17px] leading-9 text-[#3a3a3a]">
-          My primary focus right now is building an app that makes dysarthric speech easier to understand.
+          My primary focus right now is building <Link
+            href="https://www.sayra.dev/"
+            className="underline decoration-[#cfcac4] underline-offset-[3px] transition-colors hover:decoration-foreground"
+          >Sayra</Link>, an app that helps people with dysarthria turn slurred speech into clear, understandable speech.
           I post updates on my blog{" "}
           <Link
             href="/writings"
